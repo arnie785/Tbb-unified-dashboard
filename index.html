@@ -313,6 +313,162 @@ body{
   .fb-agency-cpc-grid{grid-template-columns:repeat(3,1fr);}
   .fb-nav-tab{font-size:11px;padding:8px;}
 }
+
+/* ═══════════════════════════════════════════
+   MOBILE — 480px and below
+═══════════════════════════════════════════ */
+@media(max-width:480px){
+
+  /* ── Main Nav ── */
+  .main-nav{
+    flex-direction:column;
+    align-items:stretch;
+    padding:0;
+    gap:0;
+  }
+  .nav-brand{
+    padding:12px 16px;
+    font-size:16px;
+    border-right:none;
+    border-bottom:1px solid var(--line2);
+    margin-right:0;
+    text-align:center;
+  }
+  .main-tabs{
+    display:flex;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    border-bottom:1px solid var(--line2);
+    padding:0 8px;
+    gap:0;
+  }
+  .main-tabs::-webkit-scrollbar{display:none;}
+  .main-tab{
+    flex:0 0 auto;
+    padding:10px 14px;
+    font-size:12px;
+    border-radius:0;
+    border-bottom:3px solid transparent;
+    white-space:nowrap;
+  }
+  .main-tab.active{
+    border-radius:0;
+    border-bottom-color:var(--goldDim) !important;
+  }
+  .nav-right{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 12px;
+    border-bottom:1px solid var(--line2);
+  }
+  .badge-date{font-size:10px;}
+  .btn-refresh{font-size:11px;padding:5px 10px;}
+
+  /* ── BONUS POOL ── */
+  .bp-wrap{padding:12px;}
+  .bp-topbar{grid-template-columns:1fr;gap:12px;}
+  .bp-hero{min-height:auto;padding:14px 16px;gap:12px;}
+  .bp-badge{width:56px;height:56px;font-size:28px;}
+  .bp-hero-text h1{font-size:1.8rem;}
+  .bp-sub{font-size:.85rem;}
+  .bp-kpis{grid-template-columns:1fr;gap:8px;padding:8px;}
+  .bp-kpi{min-height:auto;padding:10px 12px;}
+  .bp-kpi-icon{width:38px;height:38px;font-size:18px;}
+  .bp-kpi-value{font-size:1.5rem;}
+  .bp-grid{grid-template-columns:1fr;gap:10px;}
+  .bp-card-header{padding:12px 14px;font-size:.9rem;}
+  .bp-table thead th,.bp-table td{padding:10px 12px;font-size:.88rem;}
+  .bp-rank{width:28px;height:28px;border-radius:8px;font-size:.8rem;}
+  .bp-footer{min-height:auto;padding:14px 16px;}
+  .bp-footer-text{font-size:.95rem;}
+
+  /* ── SALES SUMMARY ── */
+  .sd-wrap{padding:12px;}
+  .sd-topbar{flex-direction:column;gap:12px;}
+  .sd-brand h1{font-size:24px;}
+  .sd-subtitle{font-size:13px;}
+  .sd-top-right{flex-direction:column;width:100%;gap:12px;}
+  .sd-month-filter{min-width:unset;width:100%;font-size:14px;padding:10px 14px;}
+  .sd-premium-box{border-left:none;padding-left:0;border-top:1px solid var(--line);padding-top:12px;}
+  .sd-premium-value{font-size:22px;}
+  .sd-kpi-line{grid-template-columns:repeat(2,1fr);}
+  .sd-kpi{min-height:140px;padding:14px 10px 12px;}
+  .sd-kpi:not(:first-child){border-left:none;border-top:1px solid var(--line);}
+  .sd-kpi:nth-child(2n){border-left:1px solid var(--line);}
+  .sd-kpi-icon{font-size:26px;}
+  .sd-kpi-value{font-size:20px;}
+  .sd-kpi-sub{font-size:12px;}
+  .sd-producer-strip-title{font-size:14px;padding:10px 14px;}
+  .sd-top-producers-list{max-width:100%;margin:12px auto 14px;}
+  .sd-producer-row{grid-template-columns:36px minmax(0,1fr) auto;gap:8px;padding:10px 12px;}
+  .sd-producer-deals{display:none;}
+  .sd-producer-name{font-size:13px;}
+  .sd-producer-value{font-size:13px;}
+  .sd-section-title{font-size:16px;padding:10px 14px;}
+  .sd-insight-grid{grid-template-columns:1fr;}
+  .sd-insight-card:not(:last-child){border-right:none;border-bottom:1px solid var(--line);}
+  .sd-insight-value{font-size:20px;}
+  .sd-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* ── FINANCIAL ── */
+  .fb-page{padding:0 12px 32px;}
+  .fb-site-header{padding:16px 0 14px;flex-direction:column;gap:10px;align-items:flex-start;}
+  .fb-logo-icon{width:38px;height:38px;font-size:16px;}
+  .fb-logo-text h1{font-size:18px;letter-spacing:2px;}
+  .fb-logo-text p{font-size:10px;}
+  .fb-header-badge{font-size:10px;padding:4px 10px;}
+  .fb-nav-tabs{gap:3px;padding:3px;border-radius:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;}
+  .fb-nav-tabs::-webkit-scrollbar{display:none;}
+  .fb-nav-tab{flex:0 0 auto;font-size:11px;padding:8px 10px;white-space:nowrap;}
+  .fb-kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .fb-kpi-card{padding:11px;}
+  .fb-kpi-label{font-size:9px;}
+  .fb-kpi-value{font-size:14px;}
+  .fb-kpi-sub{font-size:9px;}
+  .fb-grid-2{grid-template-columns:1fr;}
+  .fb-insight-grid{grid-template-columns:1fr 1fr;gap:8px;padding:8px;}
+  .fb-insight-card{padding:9px 10px;}
+  .fb-insight-card .i-value{font-size:12px;}
+  .fb-insight-card .i-desc{font-size:9px;}
+  .fb-agency-cpc-grid{grid-template-columns:repeat(2,1fr);gap:6px;padding:8px;}
+  .fb-agency-cpc-val{font-size:13px;}
+  .fb-net-bar{flex-direction:column;gap:10px;padding:14px 16px;}
+  .fb-net-label{font-size:12px;}
+  .fb-net-amount{font-size:20px;text-align:left;}
+  .fb-net-margin-lbl{text-align:left;}
+  .fb-month-bar{gap:3px;}
+  .fb-m-btn{padding:4px 8px;font-size:10px;}
+  .fb-toggle-wrap{flex-wrap:wrap;}
+  .fb-toggle-btn{font-size:10px;padding:3px 8px;}
+  .fb-card-head h3{font-size:10px;}
+  .fb-data-table th{font-size:9px;padding:6px 8px;}
+  .fb-data-table td{font-size:11px;padding:7px 8px;}
+  .fb-bar-section{padding:8px 10px;}
+  .fb-bar-meta{font-size:9px;}
+
+  /* ── Tables always scrollable on mobile ── */
+  .bp-card,.sd-section,.fb-card{overflow:hidden;}
+  .bp-table,.sd-table,.fb-data-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+}
+
+/* ── Tablet 481–768px ── */
+@media(min-width:481px) and (max-width:768px){
+  .main-nav{flex-wrap:wrap;padding:0 12px;}
+  .nav-brand{padding:10px 12px 10px 0;font-size:16px;}
+  .main-tabs{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;}
+  .main-tabs::-webkit-scrollbar{display:none;}
+  .main-tab{padding:10px 14px;font-size:12px;}
+  .bp-topbar{grid-template-columns:1fr;}
+  .bp-kpis{grid-template-columns:repeat(3,1fr);}
+  .bp-grid{grid-template-columns:1fr;}
+  .sd-kpi-line{grid-template-columns:repeat(3,1fr);}
+  .sd-kpi:not(:first-child){border-left:none;border-top:1px solid var(--line);}
+  .sd-kpi:nth-child(3n+1){border-left:none;}
+  .sd-kpi:not(:nth-child(3n+1)){border-left:1px solid var(--line);}
+  .sd-insight-grid{grid-template-columns:1fr;}
+  .sd-insight-card:not(:last-child){border-right:none;border-bottom:1px solid var(--line);}
+}
 </style>
 </head>
 <body>
