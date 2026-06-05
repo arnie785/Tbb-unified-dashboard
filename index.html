@@ -469,59 +469,18 @@ body{
   .sd-insight-grid{grid-template-columns:1fr;}
   .sd-insight-card:not(:last-child){border-right:none;border-bottom:1px solid var(--line);}
 }
-/* ═══════════════════════════════════════
-   FONT UNIFORMITY FIX — Sales Summary tab
-   Paste this block right before </style>
-   in your unified dashboard index.html
-═══════════════════════════════════════ */
 
-/* Main heading — match Bonus Pool / Financial bold Syne style */
-.sd-brand h1{
-  font-family:var(--font-display);
-  font-weight:700;
-}
-
-/* Section titles */
-.sd-section-title{
-  font-family:var(--font-display);
-  font-weight:700;
-}
-
-/* Top producers strip title */
-.sd-producer-strip-title{
-  font-family:var(--font-display);
-  font-weight:700;
-}
-
-/* Premium label */
-.sd-premium-label{
-  font-family:var(--font-display);
-  font-weight:600;
-}
-
-/* Premium value — the big number */
-.sd-premium-value{
-  font-family:var(--font-display);
-  font-weight:700;
-}
-
-/* KPI big numbers */
-.sd-kpi-value{
-  font-family:var(--font-display);
-  font-weight:700;
-}
-
-/* Insight values */
+/* ===== SALES SUMMARY FONT FIX ===== */
+.sd-brand h1,
+.sd-section-title,
+.sd-producer-strip-title,
+.sd-premium-label,
+.sd-premium-value,
+.sd-kpi-value,
 .sd-insight-value{
-  font-family:var(--font-display);
-  font-weight:700;
+    font-family: var(--font-display) !important;
+    font-weight: 700 !important;
 }
-
-/* Also fix the light 300 weight on the main h1 */
-.sd-brand h1{
-  font-weight:700 !important;
-}
-   
 </style>
 </head>
 <body>
