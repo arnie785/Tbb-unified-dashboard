@@ -781,155 +781,136 @@ async function loadAllData() {
 // ══════════════════════════════════════════
 // BONUS POOL
 // ══════════════════════════════════════════
+const BP_API = 'https://script.google.com/macros/s/AKfycby5jiw2zDl8To4CdNnEjsCvak4nZzz3Dscbw6kJaWmsDXYjuUIyAOOW6rpFMhHKMbA/exec';
+
 function bpRankClass(i){return['gold','silver','bronze','neutral'][Math.min(i,3)];}
 function bpRowIcon(i){return['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'][i]||String(i+1);}
 function bpEmpty(cols,msg='No data available.'){return`<tr class="bp-empty"><td colspan="${cols}">${msg}</td></tr>`;}
 
-async function loadBonusData(){
-  try{
-    const [wknd,rev,ref,partner,everyday,supp,ancillary]=await Promise.all([
-      fetchCSV(BONUS_ID,'0'), fetchCSV(BONUS_ID,'1'), fetchCSV(BONUS_ID,'2'),
-      fetchCSV(BONUS_ID,'3'), fetchCSV(BONUS_ID,'4'), fetchCSV(BONUS_ID,'6'), fetchCSV(BONUS_ID,'7'),
-    ]);
-    renderBPWeekend(wknd); renderBPReviews(rev); renderBPReferral(ref);
-    renderBPPartner(partner); renderBPEveryday(everyday);
-  }catch(e){
-    console.error('Bonus error:',e);
-    ['bp-weekend-tbody','bp-reviews-tbody','bp-referral-tbody','bp-partner-tbody','bp-everyday-tbody']
-      .forEach(id=>$(id).innerHTML=bpEmpty(4,'⚠ Could not load — ensure sheet is shared publicly.'));
-  }
+function loadBonusData(){
+  return new Promise((resolve)=>{
+    const cb='bp_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    window[cb]=function(data){
+      try{ renderBonusPool(data); }catch(e){ console.error('Bonus render error:',e); }
+      finally{ delete window[cb]; script.remove(); resolve(); }
+    };
+    script.onerror=function(){
+      console.error('Bonus API failed');
+      ['bp-weekend-tbody','bp-reviews-tbody','bp-referral-tbody','bp-partner-tbody','bp-everyday-tbody']
+        .forEach(id=>$(id).innerHTML=bpEmpty(4,'⚠ Could not load data.'));
+      delete window[cb]; script.remove(); resolve();
+    };
+    script.src=BP_API+'?mode=api&callback='+cb+'&t='+Date.now();
+    document.body.appendChild(script);
+  });
 }
 
-function renderBPWeekend(rows){
-  const data=rows.slice(1).filter(r=>r[0]&&r[1]).map(r=>({agent:r[0],premium:pn(r[1]),winner:r[2]||''})).sort((a,b)=>b.premium-a.premium);
-  const total=data.reduce((s,r)=>s+r.premium,0);
-  $('bp-kpi-premium').textContent=fmtM(total);
-  $('bp-weekend-tbody').innerHTML=data.length?data.map((r,i)=>`
-    <tr><td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
-    <td>${r.agent}</td><td class="bp-money">$${r.premium.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-    <td class="bp-score">${r.winner}</td></tr>`).join(''):bpEmpty(4);
-}
+function renderBonusPool(data){
+  const weekend       = data?.sections?.weekend?.rows       || [];
+  const reviews       = data?.sections?.reviews?.rows       || [];
+  const referral      = data?.sections?.referral?.rows      || [];
+  const accountability= data?.sections?.accountability?.rows|| [];
+  const bizEvery      = data?.sections?.businessEveryday?.rows|| [];
 
-function renderBPReviews(rows){
-  // Full leaderboard in columns F-H
-  const data=[];
-  for(let i=1;i<rows.length;i++){
-    const r=rows[i];
-    if(r[5]&&r[6]) data.push({agent:r[5],reviews:pn(r[6]),note:r[7]||''});
-    else if(r[0]&&r[1]&&!data.find(d=>d.agent===r[0])) data.push({agent:r[0],reviews:pn(r[1]),note:''});
-  }
-  const unique=[]; const seen=new Set();
-  data.forEach(d=>{if(!seen.has(d.agent)){seen.add(d.agent);unique.push(d);}});
-  unique.sort((a,b)=>b.reviews-a.reviews);
-  $('bp-reviews-tbody').innerHTML=unique.length?unique.map((r,i)=>`
-    <tr><td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
-    <td>${r.agent}</td><td class="bp-score">${fmtN(r.reviews)}</td>
-    <td class="bp-score">${r.note||''}</td></tr>`).join(''):bpEmpty(4);
-}
+  // KPIs
+  const totalWeekend = data?.stats?.totalWeekendPremium
+    || weekend.reduce((s,r)=>s+pn(r?.premium??r?.totalPremium??0),0);
+  const totalAnnual  = pn(data?.stats?.totalAllstateAnnual??data?.stats?.totalAnnual??0);
+  const totalPolicy  = pn(data?.stats?.totalAllstatePolicy??data?.stats?.totalPolicies??0);
+  $('bp-kpi-premium').textContent = fmtM(totalWeekend);
+  $('bp-kpi-annual').textContent  = fmtM(totalAnnual);
+  $('bp-kpi-policy').textContent  = fmtN(totalPolicy);
 
-function renderBPReferral(rows){
-  const data=rows.slice(1).filter(r=>r[0]).map(r=>({agent:r[0],referral:pn(r[1]),closed:pn(r[2])})).sort((a,b)=>b.closed-a.closed);
-  $('bp-referral-tbody').innerHTML=data.length?data.map((r,i)=>`
-    <tr><td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
-    <td>${r.agent}</td><td class="bp-score">${fmtN(r.referral)}</td>
-    <td class="bp-score">${fmtN(r.closed)}</td></tr>`).join(''):bpEmpty(4);
-}
+  // 1. Weekend
+  $('bp-weekend-tbody').innerHTML = weekend.length
+    ? weekend.map((r,i)=>`<tr>
+        <td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
+        <td>${r.agent||''}</td>
+        <td class="bp-money">${fmtM(r.premium??r.totalPremium??0)}</td>
+        <td class="bp-score">${r.winner||''}</td></tr>`).join('')
+    : bpEmpty(4);
 
-function renderBPPartner(rows){
-  const data=[];
-  for(let i=1;i<rows.length;i++){
-    const r=rows[i];
-    if(r[5]&&r[6]) data.push({team:r[5],total:pn(r[6]),note:r[7]||''});
-    else if(r[0]&&!data.find(d=>d.team===r[0])) data.push({team:r[0],total:pn(r[1]||'0'),note:''});
-  }
-  const unique=[]; const seen=new Set();
-  data.forEach(d=>{if(!seen.has(d.team)){seen.add(d.team);unique.push(d);}});
-  unique.sort((a,b)=>b.total-a.total);
-  $('bp-partner-tbody').innerHTML=unique.length?unique.map((r,i)=>`
-    <tr><td><span class="bp-rank ${bpRankClass(i)}">${i+1}</span></td>
-    <td>${r.team}</td><td class="bp-score">${fmtN(r.total)||'—'}</td>
-    <td class="bp-score">${i===0?'🏆':r.note||''}</td></tr>`).join(''):bpEmpty(4);
-}
+  // 2. Reviews
+  $('bp-reviews-tbody').innerHTML = reviews.length
+    ? reviews.map((r,i)=>`<tr>
+        <td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
+        <td>${r.agent||''}</td>
+        <td class="bp-score">${fmtN(r.reviews||0)}</td>
+        <td class="bp-score">${r.winner||''}</td></tr>`).join('')
+    : bpEmpty(4);
 
-function renderBPEveryday(rows){
-  const data=rows.slice(1).filter(r=>r[0]).map(r=>({agent:r[0],days:pn(r[1]),required:pn(r[2])||26,status:r[3]||'Not Qualified',winner:r[4]||''})).sort((a,b)=>b.days-a.days);
-  $('bp-everyday-tbody').innerHTML=data.length?data.map((r,i)=>`
-    <tr><td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
-    <td>${r.agent}</td><td class="bp-score">${fmtN(r.days)}</td>
-    <td class="bp-score">${fmtN(r.required)}</td>
-    <td class="bp-score">${r.status}</td>
-    <td class="bp-score">${r.winner}</td></tr>`).join(''):bpEmpty(6);
+  // 3. Referral
+  $('bp-referral-tbody').innerHTML = referral.length
+    ? referral.map((r,i)=>`<tr>
+        <td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
+        <td>${r.agent||''}</td>
+        <td class="bp-score">${fmtN(r.referral||0)}</td>
+        <td class="bp-score">${fmtN(r.closed||0)}</td></tr>`).join('')
+    : bpEmpty(4);
+
+  // 4. Accountability
+  $('bp-partner-tbody').innerHTML = accountability.length
+    ? accountability.map((r,i)=>`<tr>
+        <td><span class="bp-rank ${bpRankClass(i)}">${i+1}</span></td>
+        <td>${r.team||''}</td>
+        <td class="bp-score">${fmtN(r.total||0)}</td>
+        <td class="bp-score">${r.winner||''}</td></tr>`).join('')
+    : bpEmpty(4);
+
+  // 5. Business Everyday
+  $('bp-everyday-tbody').innerHTML = bizEvery.length
+    ? bizEvery.map((r,i)=>`<tr>
+        <td><span class="bp-rank ${bpRankClass(i)}">${bpRowIcon(i)}</span></td>
+        <td>${r.agent||''}</td>
+        <td class="bp-score">${fmtN(r.daysQualified||0)}</td>
+        <td class="bp-score">${fmtN(r.requiredDays||0)}</td>
+        <td class="bp-score">${r.status||''}</td>
+        <td class="bp-score">${r.winner||''}</td></tr>`).join('')
+    : bpEmpty(6);
 }
 
 // ══════════════════════════════════════════
 // SALES SUMMARY
 // ══════════════════════════════════════════
+const SD_API = 'https://script.google.com/macros/s/AKfycbzT-DPnhcQufIZtrsxiDuZhPfhix5x62rqA4SKfBOJ56I4KdP3qGyUK3lZxeXDu94CD/exec';
 const SD_AGENTS = ['Christy','Dakota','Lore','Ny','Caleb','Chelle','Verson','Tonya','Kathleen'];
 const ACQ_SOURCES = ['Referral Count','Pivot IB','AWL','TBB Funnels','Joel Leads','Americas Choice','Health for mom'];
+const ACQ_SET = new Set(ACQ_SOURCES.map(s=>s.trim().toLowerCase()));
 
-async function loadSalesData(){
-  try{
-    const [dailyRows, leadRows, summaryRows, agentSummaryRows] = await Promise.all([
-      fetchCSV(SALES_ID,'397504626'),
-      fetchCSV(SALES_ID,'8'),
-      fetchCSV(SALES_ID,'2'),
-      fetchCSV(SALES_ID,'7'),
-    ]);
-    renderSDSummary(dailyRows, agentSummaryRows);
-    renderSDPerformance(dailyRows, leadRows);
-  }catch(e){
-    console.error('Sales error:',e);
-    $('sd-kpi-line').innerHTML='<div class="sd-error">⚠ Could not load sales data.</div>';
-  }
+function loadSalesData(){
+  return new Promise((resolve)=>{
+    const cb='sd_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    window[cb]=function(data){
+      try{ renderSalesDashboard(data||{}); }catch(e){ console.error('Sales render error:',e); }
+      finally{ delete window[cb]; script.remove(); resolve(); }
+    };
+    script.onerror=function(){
+      console.error('Sales API failed');
+      $('sd-kpi-line').innerHTML='<div class="sd-error">⚠ Could not load sales data.</div>';
+      delete window[cb]; script.remove(); resolve();
+    };
+    script.src=SD_API+'?mode=data&callback='+cb;
+    document.body.appendChild(script);
+  });
 }
 
-function renderSDSummary(dailyRows, summaryRows){
-  // Aggregate from daily entries
-  const agents={};
-  for(let i=1;i<dailyRows.length;i++){
-    const r=dailyRows[i];
-    if(!r[0]||!r[1]) continue;
-    const ag=r[1].trim(); const prem=pn(r[4]); const deals=r[8]&&r[8].trim()&&r[8].trim()!=='0'?1:0;
-    const dental=r[9]&&r[9].trim().toLowerCase()==='v';
-    const bundle=r[10]&&r[10].trim().toLowerCase()==='v';
-    if(!agents[ag]) agents[ag]={name:ag,premium:0,deals:0,apps:0,dental:0,bundle:0};
-    agents[ag].premium+=prem; agents[ag].apps+=1;
-    if(deals) agents[ag].deals+=1; if(dental) agents[ag].dental+=1; if(bundle) agents[ag].bundle+=1;
-  }
-  const agList=Object.values(agents).filter(a=>a.premium>0).sort((a,b)=>b.premium-a.premium);
-  const totalPrem=agList.reduce((s,a)=>s+a.premium,0);
-  const totalDeals=agList.reduce((s,a)=>s+a.deals,0);
+function renderSalesDashboard(data){
+  const summary = data.summary || {};
+  const headers = data.headers || [];
 
-  $('sd-top-premium').textContent=fmt(totalPrem);
+  // ── Top Premium ──
+  $('sd-top-premium').textContent = fmtM(summary.totalRunningPremium||0);
 
-  // Find top agents per category from summaryRows
-  // summaryRows: Agent Name, Referral, TotalSales, ACA, DENTAL, AllApps, DealsClosed, DentalPlusSold, DentalPlus, D/VPremium, STM...
-  const agentData={};
-  if(summaryRows&&summaryRows.length>1){
-    for(let i=1;i<summaryRows.length;i++){
-      const r=summaryRows[i];
-      if(!r[0]||!SD_AGENTS.includes(r[0])) continue;
-      agentData[r[0]]={
-        name:r[0],totalSales:pn(r[5]),deals:pn(r[9]),
-        dentalPlus:pn(r[12]),bundle:pn(r[23]),
-        mec:pn(r[22]),indemnity:pn(r[21]),crossSale:pn(r[5])
-      };
-    }
-  }
-  const adList=Object.values(agentData).filter(a=>a.totalSales>0).sort((a,b)=>b.totalSales-a.totalSales);
-
-  // KPI cards
-  const topMec=adList.sort((a,b)=>b.mec-a.mec)[0];
-  const topInd=adList.sort((a,b)=>b.indemnity-a.indemnity)[0];
-  const topDental=adList.sort((a,b)=>b.dentalPlus-a.dentalPlus)[0];
-  const topBundle=adList.sort((a,b)=>b.bundle-a.bundle)[0];
+  // ── KPI Cards ──
   const kpiCards=[
-    {icon:'🤝',label:'Total Deals Closed',value:fmtN(totalDeals),sub:'Deals'},
-    {icon:'👑',label:'Top MEC Agent',value:topMec?fmt(topMec.mec):'—',sub:topMec?topMec.name:'—'},
-    {icon:'🛡️',label:'Top Indemnity Agent',value:topInd?fmt(topInd.indemnity):'—',sub:topInd?topInd.name:'—'},
-    {icon:'↔️',label:'Top Cross Sale Agent',value:agList[0]?fmt(agList[0].premium):'—',sub:agList[0]?agList[0].name:'—'},
-    {icon:'🦷',label:'Top Dental+ Agent',value:topDental?fmtN(topDental.dental)+'  deals':'—',sub:topDental?topDental.name:'—'},
-    {icon:'🎁',label:'Top Bundle Agent',value:topBundle?fmtN(topBundle.bundle)+' bundles':'—',sub:topBundle?topBundle.name:'—'},
+    {icon:'🤝',label:'Total Deals Closed',    value:fmtN(summary.totalDeals||0),              sub:'Deals'},
+    {icon:'👑',label:'Top MEC Agent',          value:fmtM(summary.topMec?.value||0),            sub:summary.topMec?.agent||'—'},
+    {icon:'🛡️',label:'Top Indemnity Agent',   value:fmtM(summary.topIndemnity?.value||0),      sub:summary.topIndemnity?.agent||'—'},
+    {icon:'↔️',label:'Top Cross Sale Agent',  value:fmtM(summary.topCrossSale?.value||0),      sub:summary.topCrossSale?.agent||'—'},
+    {icon:'🦷',label:'Top Dental+ Agent',      value:fmtM(summary.topDentalPlus?.value||0),     sub:summary.topDentalPlus?.agent||'—'},
+    {icon:'🎁',label:'Top Bundle Agent',       value:fmtM(summary.topBundle?.value||0),         sub:summary.topBundle?.agent||'—'},
   ];
   $('sd-kpi-line').innerHTML=kpiCards.map(c=>`
     <div class="sd-kpi">
@@ -939,76 +920,69 @@ function renderSDSummary(dailyRows, summaryRows){
       <div class="sd-kpi-sub">${c.sub}</div>
     </div>`).join('');
 
-  // Top 5 producers
-  $('sd-top-producers').innerHTML=agList.slice(0,5).map((p,i)=>`
-    <div class="sd-producer-row">
-      <div class="sd-producer-rank">#${i+1}</div>
-      <div class="sd-producer-name">${p.name}</div>
-      <div class="sd-producer-value">${fmt(p.premium)}</div>
-      <div class="sd-producer-deals">${p.deals} deals</div>
-    </div>`).join('')||'<div class="sd-loading">No producer data.</div>';
+  // ── Top 5 Producers ──
+  const producers = summary.topProducers||[];
+  $('sd-top-producers').innerHTML = producers.length
+    ? producers.map((p,i)=>`
+        <div class="sd-producer-row">
+          <div class="sd-producer-rank">#${i+1}</div>
+          <div class="sd-producer-name">${p.agent||'—'}</div>
+          <div class="sd-producer-value">${fmtM(p.value||0)}</div>
+          <div class="sd-producer-deals">${fmtN(p.deals||0)} deals</div>
+        </div>`).join('')
+    : '<div class="sd-loading">No producer data.</div>';
 
-  // Allstate + policy for bonus panel
-  $('bp-kpi-annual').textContent='—';
-  $('bp-kpi-policy').textContent=fmtN(totalDeals);
+  // ── Performance + Acquisition tables ──
+  const allRows = [
+    ...(Array.isArray(data.performanceOverview)?data.performanceOverview:[]),
+    ...(Array.isArray(data.acquisitionAnalysis)?data.acquisitionAnalysis:[]),
+  ];
+  const perfRows=[],acqRows=[];
+  allRows.forEach(row=>{
+    if(!row||!row.category) return;
+    const key=row.category.trim().toLowerCase();
+    if(ACQ_SET.has(key)) acqRows.push(row); else perfRows.push(row);
+  });
+  renderSDTable('sd-perf-table', headers, perfRows);
+  renderSDTable('sd-acq-table',  headers, acqRows);
 
-  // Insights
-  const topRef=agList[0];
+  // ── Executive Insights ──
+  const ins = data.insights||{};
   $('sd-insights').innerHTML=`
     <div class="sd-insight-card">
-      <div class="sd-insight-title">Top Producer</div>
-      <div class="sd-insight-value">${topRef?topRef.name:'—'}</div>
-      <div class="sd-insight-sub">${topRef?fmt(topRef.premium)+' · '+topRef.deals+' deals':'—'}</div>
+      <div class="sd-insight-title">Most Referral Agent</div>
+      <div class="sd-insight-value">${ins.bestReferral?.agent||'—'}</div>
+      <div class="sd-insight-sub">${ins.bestReferral?.value||0} referrals</div>
     </div>
     <div class="sd-insight-card">
-      <div class="sd-insight-title">Team Total Premium</div>
-      <div class="sd-insight-value">${fmt(totalPrem)}</div>
-      <div class="sd-insight-sub">${agList.length} active agents</div>
+      <div class="sd-insight-title">Best Acquisition Closer</div>
+      <div class="sd-insight-value">${ins.acquisitionCloser?.agent||'—'}</div>
+      <div class="sd-insight-sub">${ins.acquisitionCloser?.closes||0} closes</div>
     </div>
     <div class="sd-insight-card">
-      <div class="sd-insight-title">Avg Premium / Agent</div>
-      <div class="sd-insight-value">${agList.length?fmt(totalPrem/agList.length):'—'}</div>
-      <div class="sd-insight-sub">Based on running premium</div>
+      <div class="sd-insight-title">Top Lead Source</div>
+      <div class="sd-insight-value">${ins.bestLeadSource?.source||'—'}</div>
+      <div class="sd-insight-sub">${ins.bestLeadSource?.total||0} total leads</div>
     </div>`;
 }
 
-function renderSDPerformance(dailyRows, leadRows){
-  // Performance table: categories × agents from daily entries
-  const cats={}; const agentSet=new Set();
-  for(let i=1;i<dailyRows.length;i++){
-    const r=dailyRows[i]; if(!r[0]||!r[1]||!r[2]) continue;
-    const ag=r[1].trim(); const cat=r[2].trim(); const prem=pn(r[4]);
-    agentSet.add(ag);
-    if(!cats[cat]) cats[cat]={};
-    if(!cats[cat][ag]) cats[cat][ag]=0;
-    cats[cat][ag]+=prem;
-  }
-  const agNames=[...agentSet].sort();
-  const catNames=Object.keys(cats).sort();
-
-  if(!catNames.length){
-    $('sd-perf-table').innerHTML='<tbody><tr><td class="sd-loading">No performance data.</td></tr></tbody>';
-  } else {
-    let html=`<thead><tr><th>Category</th>${agNames.map(a=>`<th>${a}</th>`).join('')}</tr></thead><tbody>`;
-    html+=catNames.map(cat=>`<tr><td>${cat}</td>${agNames.map(ag=>`<td>${cats[cat][ag]?fmt(cats[cat][ag]):'—'}</td>`).join('')}</tr>`).join('');
-    html+='</tbody>';
-    $('sd-perf-table').innerHTML=html;
-  }
-
-  // Acquisition: lead source × agents
-  if(!leadRows||leadRows.length<2){
-    $('sd-acq-table').innerHTML='<tbody><tr><td class="sd-loading">No acquisition data.</td></tr></tbody>';
+function renderSDTable(id, headers, rows){
+  if(!headers.length||!rows.length){
+    $(id).innerHTML='<tbody><tr><td class="sd-loading">No data found.</td></tr></tbody>';
     return;
   }
-  const lHeaders=leadRows[0].slice(1);
-  let lHtml=`<thead><tr><th>Lead Source</th>${lHeaders.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
-  lHtml+=leadRows.slice(1).filter(r=>r[0]).map(r=>{
-    const vals=r.slice(1);
-    return`<tr><td>${r[0]}</td>${vals.map(v=>`<td>${v||'—'}</td>`).join('')}</tr>`;
-  }).join('');
-  lHtml+='</tbody>';
-  $('sd-acq-table').innerHTML=lHtml;
+  let html='<thead><tr><th>Category</th>';
+  headers.forEach(h=>{html+=`<th>${h}</th>`;});
+  html+='</tr></thead><tbody>';
+  rows.forEach(row=>{
+    html+=`<tr><td>${row.category||''}</td>`;
+    (row.values||[]).forEach(v=>{html+=`<td>${v||'—'}</td>`;});
+    html+='</tr>';
+  });
+  html+='</tbody>';
+  $(id).innerHTML=html;
 }
+
 
 // ══════════════════════════════════════════
 // FINANCIAL BREAKDOWN
