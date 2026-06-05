@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>The Benefits Boss — Unified Command Center 2026</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 
 <style>
 /* ═══════════════════════════════════════════
@@ -18,7 +18,7 @@
   --silver:#d4d4d8;--bronze:#cd7f32;
   --green:#3DBA6A;--red:#FF5A5A;--blue:#5A9EFF;
   --radius:26px;--shadow:0 0 0 1px rgba(198,150,51,.16),0 0 20px rgba(198,150,51,.08);
-  --font-display:'Syne',sans-serif;
+  --font-display:'Inter',sans-serif;
   --font-body:'Inter',sans-serif;
   --font-mono:'DM Mono',monospace;
 }
@@ -154,7 +154,7 @@ body{
 ═══════════════════════════════════════════ */
 .sd-wrap{padding:18px;}
 .sd-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:18px;}
-.sd-brand h1{margin:0;color:var(--gold);font-size:44px;font-weight:300;line-height:1;letter-spacing:.4px;}
+.sd-brand h1{margin:0;color:var(--gold);font-size:44px;font-weight:700;line-height:1;letter-spacing:.4px;}
 .sd-subtitle{margin-top:10px;color:#b6b6b6;font-size:15px;font-weight:300;}
 .sd-top-right{display:flex;align-items:flex-start;gap:22px;margin-top:4px;}
 .sd-month-filter{border:1px solid var(--line);border-radius:16px;padding:12px 18px;color:var(--gold);
@@ -162,7 +162,7 @@ body{
   background:linear-gradient(180deg,#0e0e0e,#070707);}
 .sd-premium-box{border-left:1px solid var(--line);padding-left:22px;}
 .sd-premium-label{color:var(--gold);font-size:14px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
-.sd-premium-value{color:var(--gold);font-size:30px;font-weight:400;line-height:1;}
+.sd-premium-value{color:var(--gold);font-size:34px;font-weight:700;line-height:1;line-height:1;}
 .sd-kpi-line{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);
   border-bottom:1px solid var(--line);margin-bottom:18px;}
 .sd-kpi{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
@@ -170,7 +170,7 @@ body{
 .sd-kpi:not(:first-child){border-left:1px solid var(--line);}
 .sd-kpi-icon{font-size:34px;line-height:1;}
 .sd-kpi-label{color:#d6d6d6;font-size:11px;line-height:1.1;font-weight:300;text-transform:uppercase;letter-spacing:.3px;}
-.sd-kpi-value{color:var(--gold);font-size:28px;line-height:1;font-weight:400;padding-bottom:10px;
+.sd-kpi-value{color:var(--gold);font-size:30px;line-height:1;font-weight:700;padding-bottom:10px;
   border-bottom:1px solid rgba(245,196,81,.45);min-width:70%;}
 .sd-kpi-sub{color:#d9d9d9;font-size:13px;font-weight:300;line-height:1.4;}
 .sd-producer-strip{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:20px;
@@ -469,18 +469,93 @@ body{
   .sd-insight-grid{grid-template-columns:1fr;}
   .sd-insight-card:not(:last-child){border-right:none;border-bottom:1px solid var(--line);}
 }
-
-/* ===== SALES SUMMARY FONT FIX ===== */
+/* ═══════════════════════════════════════
+   FONT UNIFORMITY FIX — Sales Summary tab
+   Paste this block right before 
+/* ===== TBB READABILITY PACK ===== */
+.bp-hero-text h1,
+.bp-card-header,
 .sd-brand h1,
 .sd-section-title,
 .sd-producer-strip-title,
 .sd-premium-label,
 .sd-premium-value,
 .sd-kpi-value,
-.sd-insight-value{
-    font-family: var(--font-display) !important;
+.sd-insight-value,
+.fb-logo-text h1,
+.fb-net-label{
+    font-family: var(--font-body) !important;
     font-weight: 700 !important;
 }
+
+</style>
+   in your unified dashboard index.html
+═══════════════════════════════════════ */
+
+/* Main heading — match Bonus Pool / Financial bold Syne style */
+.sd-brand h1{
+  font-family:var(--font-display);
+  font-weight:700;
+}
+
+/* Section titles */
+.sd-section-title{
+  font-family:var(--font-display);
+  font-weight:700;
+}
+
+/* Top producers strip title */
+.sd-producer-strip-title{
+  font-family:var(--font-display);
+  font-weight:700;
+}
+
+/* Premium label */
+.sd-premium-label{
+  font-family:var(--font-display);
+  font-weight:600;
+}
+
+/* Premium value — the big number */
+.sd-premium-value{
+  font-family:var(--font-display);
+  font-weight:700;
+}
+
+/* KPI big numbers */
+.sd-kpi-value{
+  font-family:var(--font-display);
+  font-weight:700;
+}
+
+/* Insight values */
+.sd-insight-value{
+  font-family:var(--font-display);
+  font-weight:700;
+}
+
+/* Also fix the light 300 weight on the main h1 */
+.sd-brand h1{
+  font-weight:700 !important;
+}
+   
+
+/* ===== TBB READABILITY PACK ===== */
+.bp-hero-text h1,
+.bp-card-header,
+.sd-brand h1,
+.sd-section-title,
+.sd-producer-strip-title,
+.sd-premium-label,
+.sd-premium-value,
+.sd-kpi-value,
+.sd-insight-value,
+.fb-logo-text h1,
+.fb-net-label{
+    font-family: var(--font-body) !important;
+    font-weight: 700 !important;
+}
+
 </style>
 </head>
 <body>
